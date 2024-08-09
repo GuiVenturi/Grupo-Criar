@@ -1,0 +1,180 @@
+# Criação da BASE LOCAL
+
+CREATE DATABASE LOCAL;
+USE LOCAL;
+
+CREATE TABLE CLIENTES (
+IDCLIENTE INT auto_increment PRIMARY KEY,
+NOME VARCHAR(100),
+CIDADE VARCHAR(100)
+);
+
+CREATE TABLE PRODUTOS (
+IDPRODUTO INT AUTO_INCREMENT PRIMARY KEY,
+NOME VARCHAR(100),
+VALOR INT(10)
+);
+
+CREATE TABLE PEDIDOS (
+IDPEDIDOS INT auto_increment PRIMARY KEY,
+IDCLIENTE INT,
+IDPRODUTO INT,
+VALORTOTALPEDIDO INT(10),
+DATAPEDIDO DATETIME,
+
+FOREIGN KEY (IDCLIENTE) REFERENCES CLIENTES(IDCLIENTE),
+FOREIGN KEY (IDPRODUTO) REFERENCES PRODUTOS(IDPRODUTO)
+);
+
+# INSERÇÃO DE CLIENTES
+INSERT INTO CLIENTES (NOME, CIDADE) VALUES ('CLIENTE 1', 'RIBEIRAO PRETO');
+INSERT INTO CLIENTES (NOME, CIDADE) VALUES ('CLIENTE 2', 'RIBEIRAO PRETO');
+
+# INSERÇÃO DE PRODUTOS
+INSERT INTO PRODUTOS (NOME, VALOR) VALUES('PRODUTO 1', 100);
+INSERT INTO PRODUTOS (NOME, VALOR) VALUES('PRODUTO 2', 200);
+INSERT INTO PRODUTOS (NOME, VALOR) VALUES('PRODUTO 3', 300);
+INSERT INTO PRODUTOS (NOME, VALOR) VALUES('PRODUTO 4', 450);
+
+# INSERÇÃO DE PEDIDOS Nº 1
+INSERT INTO PEDIDOS (IDCLIENTE, IDPRODUTO, VALORTOTALPEDIDO, DATAPEDIDO) VALUES (3, 1,100, NOW());
+INSERT INTO PEDIDOS (IDCLIENTE, IDPRODUTO, VALORTOTALPEDIDO, DATAPEDIDO) VALUES (3, 1,200, NOW());
+INSERT INTO PEDIDOS (IDCLIENTE, IDPRODUTO, VALORTOTALPEDIDO, DATAPEDIDO) VALUES (3, 1,300, NOW());
+INSERT INTO PEDIDOS (IDCLIENTE, IDPRODUTO, VALORTOTALPEDIDO, DATAPEDIDO) VALUES (3, 1,400, NOW());
+INSERT INTO PEDIDOS (IDCLIENTE, IDPRODUTO, VALORTOTALPEDIDO, DATAPEDIDO) VALUES (3, 1,500, NOW());
+INSERT INTO PEDIDOS (IDCLIENTE, IDPRODUTO, VALORTOTALPEDIDO, DATAPEDIDO) VALUES (3, 1,500, NOW());
+
+# INSERÇÃO DE PEDIDOS Nº 2
+INSERT INTO PEDIDOS (IDCLIENTE, IDPRODUTO, VALORTOTALPEDIDO, DATAPEDIDO) VALUES (4, 2,100, NOW());
+INSERT INTO PEDIDOS (IDCLIENTE, IDPRODUTO, VALORTOTALPEDIDO, DATAPEDIDO) VALUES (4, 2,200, NOW());
+INSERT INTO PEDIDOS (IDCLIENTE, IDPRODUTO, VALORTOTALPEDIDO, DATAPEDIDO) VALUES (4, 2,300, NOW());
+INSERT INTO PEDIDOS (IDCLIENTE, IDPRODUTO, VALORTOTALPEDIDO, DATAPEDIDO) VALUES (4, 2,400, NOW());
+INSERT INTO PEDIDOS (IDCLIENTE, IDPRODUTO, VALORTOTALPEDIDO, DATAPEDIDO) VALUES (4, 2,550, NOW());
+INSERT INTO PEDIDOS (IDCLIENTE, IDPRODUTO, VALORTOTALPEDIDO, DATAPEDIDO) VALUES (4, 2,550, NOW());
+
+
+# Consultas básicas:
+#Como você encontraria todos os clientes de uma determinada cidade?
+SELECT 
+	* 
+FROM 
+	CLIENTES 
+WHERE 
+	CIDADE = 'RIBEIRAO PRETO';
+
+#Como você calcularia a média de vendas por produto?
+SELECT 
+	IDPRODUTO, 
+    AVG(VALORTOTALPEDIDO) AS MEDIAVENDAS 
+FROM 
+	PEDIDOS 
+GROUP BY 
+	IDPRODUTO;
+
+#Como você listaria os produtos que nunca foram vendidos?
+SELECT 
+	PRODUTOS.NOME, 
+	PRODUTOS.VALOR 
+FROM 
+	PRODUTOS 
+LEFT JOIN PEDIDOS ON PEDIDOS.IDPRODUTO = PRODUTOS.IDPRODUTO
+WHERE PEDIDOS.IDPRODUTO IS NULL;
+
+
+#Explique os diferentes tipos de junções (INNER JOIN, LEFT JOIN, RIGHT JOIN, FULL OUTER JOIN).
+-- INNER JOIN 		Sempre irá trazer todos os dados que sejam compatíveis com a condição
+-- LEFT JOIN 		Sempre irá trazer todos os dados que sejam compatíveis com a condição, inclusive os dados que sejam null
+-- RIGHT JOIN		Sempre irá trazer todos os dados que sejam compatíveis com a condição porém, pode trazer dados sendo null em uma das tabelas
+-- FULL OUTER JOIN 	Sempre irá trazer todos os dados que sejam compatíveis com a condição combinando as funções LEFT JOIN e RIGHT JOIN, trazendo todos os dados de ambas as tabelas sendo eles NULL ou não
+
+#Como você uniria duas tabelas para encontrar os pedidos de um determinado cliente?
+SELECT
+    CLIENTES.NOME,
+    PEDIDOS.VALORTOTALPEDIDO
+FROM
+	PEDIDOS
+    INNER JOIN CLIENTES ON CLIENTES.IDCLIENTE = PEDIDOS.IDCLIENTE
+WHERE 
+	CLIENTES.NOME = 'CLIENTE 1';
+	
+#Como você calcularia o número total de pedidos por mês?
+SELECT 
+DATE_FORMAT(PEDIDOS.DATAPEDIDO, '%Y-%m') AS MES,
+COUNT(*) AS NUMERODEPEDIDOS
+FROM PEDIDOS
+GROUP BY MES
+ORDER BY MES;
+
+#Como você encontraria os clientes que fizeram mais de 5 pedidos?
+SELECT 
+CLIENTES.IDCLIENTE,
+CLIENTES.NOME,
+COUNT(PEDIDOS.IDPEDIDOS) AS TOTAL
+FROM CLIENTES
+INNER JOIN PEDIDOS ON PEDIDOS.IDCLIENTE = CLIENTES.IDCLIENTE
+GROUP BY 
+CLIENTES.IDCLIENTE,
+CLIENTES.NOME
+HAVING 
+COUNT(PEDIDOS.IDPEDIDOS) > 5;
+
+# Quando você usaria uma subconsulta?
+-- A subconsulta pode ser utilizada para trazer dados que tenham uma relação direta ou indireta com o select principal, 
+-- por exemplo, quero selecionar clientes e além disso quero selecionar pedidos ao mesmo tempo para correlacionar o select principal, 
+-- trazendo as colunas selecionadas de ambas tabelas, o sub select torna isso possível.
+
+#  Dê um exemplo de uma subconsulta correlacionada.
+SELECT 
+CLIENTES.NOME, CLIENTES.CIDADE, P.VALORTOTALPEDIDO, P.DATAPEDIDO
+FROM CLIENTES
+LEFT JOIN (
+			SELECT 
+				PEDIDOS.IDCLIENTE, PEDIDOS.VALORTOTALPEDIDO, PEDIDOS.DATAPEDIDO 
+            FROM 
+				PEDIDOS 
+			ORDER BY 
+				PEDIDOS.DATAPEDIDO
+			) P ON P.IDCLIENTE = CLIENTES.IDCLIENTE
+;
+#  Quais são as principais funções de agregação (COUNT, SUM, AVG, MAX, MIN)?
+-- COUNT -> Função responsável por realizar a contágem de linhas e retorná-la da maneira desejada.
+-- SUM -> Função responsável por realizar a somatória entre uma coluna retornando a somatória total
+-- AVG -> Função responsável por realizar o calculo médio de uma determinada coluna
+-- MAX -> Função responsável por retornar o maior valor de uma coluna
+-- MIN -> Função responsável por retornar o menor valor de uma coluna
+
+# Como você usaria a função CASE WHEN?
+SELECT 
+	CLIENTES.NOME,
+	CASE WHEN PEDIDOS.IDCLIENTE IS NULL 
+		THEN 'NAO POSSUI PEDIDO' 
+        ELSE 'POSSUI PEDIDO' 
+	END PEDIDOS
+FROM 
+	CLIENTES 
+    LEFT JOIN PEDIDOS ON PEDIDOS.IDCLIENTE = CLIENTES.IDCLIENTE
+GROUP BY
+	CLIENTES.IDCLIENTE
+;
+
+
+#Como você criaria uma tabela com uma chave primária e índices?    
+CREATE TABLE TABELAEXEMPLO (
+CAMPOID INT AUTO_INCREMENT PRIMARY KEY,
+CAMPO1 	VARCHAR(100), 
+CAMPO2 	VARCHAR(150)
+);
+CREATE INDEX IDX_COLUNA ON TABELAEXEMPLO(CAMPO1);
+
+#Como você alteraria uma coluna existente em uma tabela?
+ALTER TABLE TABELAEXEMPLO MODIFY COLUMN CAMPO1 VARCHAR(50);
+
+
+#Quais são as principais técnicas de otimização de consultas?
+-- Existem diversas formas que podem otimizar as consultas as principais são utilização de Index em criação de tabelas, até mesmo para consultas e utilização mais complexas é possível utilizar o index para não precisar chamar a tabela completa.
+-- Funções de agrupamento desnecessárias devem ser evitadas. 
+-- Utilização de TRANSACTIONS e COMMIT são essenciais em operações, até mesmo para questões de segurança.
+-- Sempre que necessário utilizar uma tabela temporária lembrar-se de apagá-las após o uso para que a mesma não fique em memória e ocasione algum problema de desempenho.
+
+#Como você identificaria uma consulta lenta?
+-- Em primeiro momento podemos observar o tempo de execução de um script, procedure, trigger, etc, executando-a, para algo mais técnico existe a possibilidade de gravarmos o log de querys que consideramos lenta como por exemplo a função 'SET GLOBAL long_query_time' onde podemos definir um tempo de execução que podemos considerar ''lento''.
